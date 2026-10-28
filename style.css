@@ -130,3 +130,39 @@ tbody tr:nth-child(even) {
 .btn-remover:hover {
     background-color: #dc2626;
 }
+
+/* Estilos adicionados para o modo de edição */
+.botoes-formulario {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.btn-editar {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+    padding: 5px 10px;
+    font-size: 12px;
+    margin-right: 6px;
+}
+.btn-editar:hover { background-color: #bfdbfe; }
+
+.btn-cancelar {
+    background-color: #e2e8f0;
+    color: #334155;
+}
+.btn-cancelar:hover { background-color: #cbd5e1; }
+button[hidden] { display: none; }
+
+.resumo-container {
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.container { overflow-x: auto; }
+#tabela-produtos { min-width: 560px; }
+
+@media (max-width: 600px) {
+    body { padding: 10px; }
+    .container { margin: 10px auto; padding: 16px; }
+    .resumo-container { align-items: flex-start; }
+}
