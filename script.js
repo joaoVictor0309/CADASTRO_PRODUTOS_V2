@@ -13,10 +13,9 @@ class Produto {
 
 // FASE 2: Gerenciamento de Estado
 const listaDeProdutos = [];
-// null = Modo Cadastro; número = Modo Edição.
 let indiceEdicao = null;
 
-// Persistência com localStorage (mantém a chave do projeto original).
+// Persistência com localStorage
 const CHAVE_STORAGE = "sistema_estoque_produtos";
 
 function salvarNoLocalStorage() {
@@ -54,20 +53,28 @@ const btnLimparTudo = document.getElementById("limpar-tabela");
 const totalEstoqueEl = document.getElementById("total-estoque");
 const btnSalvar = document.getElementById("btn-salvar");
 const btnCancelar = document.getElementById("btn-cancelar");
+const campoBusca = document.getElementById("campo-busca"); // Novo elemento da Versão 4
 
 // FASE 4: Gerenciamento do modo de edição
-function prepararEdicao(index) {
-    if (index < 0 || index >= listaDeProdutos.length) {
+function prepararEdicao(indexReal) {
+    const termoBusca = campoBusca.value.trim().toLowerCase();
+    const produtosFiltrados = obterProdutosFiltrados();
+    const produtoAlvo = produtosFiltrados[indexReal];
+
+    // Encontra o índice correspondente na lista principal
+    const indexOriginal = listaDeProdutos.indexOf(produtoAlvo);
+
+    if (indexOriginal < 0 || indexOriginal >= listaDeProdutos.length) {
         alert("Produto não encontrado.");
         return;
     }
 
-    const produto = listaDeProdutos[index];
+    const produto = listaDeProdutos[indexOriginal];
     campoNome.value = produto.nome;
     campoPreco.value = produto.preco;
     campoQuantidade.value = produto.quantidade;
 
-    indiceEdicao = index;
+    indiceEdicao = indexOriginal;
     btnSalvar.textContent = "Salvar Alterações";
     btnCancelar.hidden = false;
     campoNome.focus();
@@ -84,21 +91,18 @@ function resetarFormulario() {
 formProduto.addEventListener("submit", function (event) {
     event.preventDefault();
 
-    // Sanitização com trim().
     const nome = campoNome.value.trim();
     const precoTexto = campoPreco.value.trim();
     const quantidadeTexto = campoQuantidade.value.trim();
     const preco = Number(precoTexto);
     const quantidade = Number(quantidadeTexto);
 
-    // Guard Clause: interrompe o submit se o nome estiver vazio.
     if (!nome) {
         alert("Por favor, informe um nome válido para o produto.");
         campoNome.focus();
         return;
     }
 
-    // Guard Clause: preço e quantidade devem ser válidos e maiores que zero.
     if (
         precoTexto === "" ||
         !Number.isFinite(preco) ||
@@ -114,7 +118,6 @@ formProduto.addEventListener("submit", function (event) {
 
     const novoProduto = new Produto(nome, preco, quantidade);
 
-    // Inclusão (Create) ou atualização (Update).
     if (indiceEdicao === null) {
         listaDeProdutos.push(novoProduto);
         alert("Produto cadastrado com sucesso!");
@@ -132,7 +135,6 @@ btnCancelar.addEventListener("click", function () {
     resetarFormulario();
 });
 
-// Limpar toda a tabela.
 btnLimparTudo.addEventListener("click", function () {
     if (listaDeProdutos.length === 0) {
         alert("A tabela já está vazia!");
@@ -147,15 +149,25 @@ btnLimparTudo.addEventListener("click", function () {
     }
 });
 
-// FASE 6: Atualização e renderização da interface
-function removerProduto(index) {
+// FASE 6: Atualização e renderização da interface (Versão 4)
+
+function obterProdutosFiltrados() {
+    const termo = campoBusca.value.trim().toLowerCase();
+    return listaDeProdutos.filter(produto => produto.nome.toLowerCase().includes(termo));
+}
+
+function removerProduto(indexReal) {
     if (!confirm("Deseja remover este produto?")) return;
 
-    listaDeProdutos.splice(index, 1);
+    const produtosFiltrados = obterProdutosFiltrados();
+    const produtoAlvo = produtosFiltrados[indexReal];
+    const indexOriginal = listaDeProdutos.indexOf(produtoAlvo);
 
-    if (indiceEdicao === index) {
+    listaDeProdutos.splice(indexOriginal, 1);
+
+    if (indiceEdicao === indexOriginal) {
         resetarFormulario();
-    } else if (indiceEdicao !== null && indiceEdicao > index) {
+    } else if (indiceEdicao !== null && indiceEdicao > indexOriginal) {
         indiceEdicao -= 1;
     }
 
@@ -164,7 +176,8 @@ function removerProduto(index) {
 }
 
 function atualizarTotalEstoque() {
-    const total = listaDeProdutos.reduce(
+    const produtosVisiveis = obterProdutosFiltrados();
+    const total = produtosVisiveis.reduce(
         (acc, produto) => acc + produto.calcularSubtotal(),
         0
     );
@@ -179,7 +192,20 @@ function renderizarTabela() {
     const tabelaBody = document.querySelector("#tabela-produtos tbody");
     tabelaBody.innerHTML = "";
 
-    listaDeProdutos.forEach((produto, index) => {
+    const produtosFiltrados = obterProdutosFiltrados();
+
+    // Tratamento caso nenhum produto seja encontrado na busca
+    if (produtosFiltrados.length === 0) {
+        const linhaVazia = document.createElement("tr");
+        const celulaVazia = document.createElement("td");
+        celulaVazia.colSpan = 5;
+        celulaVazia.textContent = "Nenhum produto encontrado.";
+        linhaVazia.appendChild(celulaVazia);
+        tabelaBody.appendChild(linhaVazia);
+        return;
+    }
+
+    produtosFiltrados.forEach((produto, index) => {
         const linha = document.createElement("tr");
 
         const celulaNome = document.createElement("td");
@@ -230,6 +256,11 @@ function atualizarInterface() {
     renderizarTabela();
     atualizarTotalEstoque();
 }
+
+// Evento de digitação dinâmica para a busca em tempo real
+campoBusca.addEventListener("input", function () {
+    atualizarInterface();
+});
 
 // FASE 7: Inicialização
 carregarDoLocalStorage();

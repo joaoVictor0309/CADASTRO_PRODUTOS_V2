@@ -98,6 +98,15 @@ button {
     color: #0f172a;
 }
 
+/* Estilo para o container de busca da Versão 4 */
+.busca-container {
+    margin-bottom: 15px;
+}
+
+.busca-container input {
+    width: 100%;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -131,7 +140,7 @@ tbody tr:nth-child(even) {
     background-color: #dc2626;
 }
 
-/* Estilos adicionados para o modo de edição */
+/* Estilos para o modo de edição */
 .botoes-formulario {
     display: flex;
     gap: 10px;
